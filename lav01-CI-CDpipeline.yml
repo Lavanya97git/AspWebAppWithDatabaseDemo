@@ -42,6 +42,9 @@ stages:
             inputs:
               pollingTimeoutSec: "300"
 
+          - script: dotnet build ./WebApp/WebApp.csproj --configuration Release
+            displayName: "Build App without SQL project"
+
           - script: dotnet publish -c Release -o $(Build.ArtifactStagingDirectory)
             displayName: "Publish App"
 
