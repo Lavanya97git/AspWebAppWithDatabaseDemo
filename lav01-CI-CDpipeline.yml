@@ -35,10 +35,10 @@ stages:
           - script: dotnet test --configuration Release --collect:"XPlat Code Coverage"
             displayName: "Run Unit Tests"
 
-          - task: SonarQubeAnalyze@3
+          - task: SonarCloudAnalyze@3
             displayName: "Run SonarQube Analysis"
 
-          - task: SonarQubePublish@3
+          - task: SonarCloudPublish@3
             inputs:
               pollingTimeoutSec: "300"
 
