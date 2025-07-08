@@ -1,14 +1,21 @@
-variable "resource-group-name" {
-  default = "terraform-resource-group1"
-  description = "The prefix used for all resources in this example"
-}
-
-variable "app-service-name" {
-  default = "terraform-app-service"
-  description = "The name of the Web App"
+variable "resource_group_name" {
+  default     = "AZrg1011"
+  type        = string
+  description = "Name of the resource group"
 }
 
 variable "location" {
-  default = "West Europe"
-  description = "The Azure location where all resources in this example should be created"
+  type        = string
+  default     = "East US"
+  description = "Azure region"
+}
+
+variable "app_service_plan_name" {
+  type        = string
+  description = "Name of the App Service plan"
+}
+
+variable "web_app_name" {
+  type        = string
+  description = "Name of the Azure Web App"
 }

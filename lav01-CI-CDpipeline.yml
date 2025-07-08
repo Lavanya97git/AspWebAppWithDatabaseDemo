@@ -1,0 +1,107 @@
+trigger:
+  branches:
+    include:
+      - devbranch
+#     - master
+variables:
+  - group: project-variablesCI-CD
+stages:
+  - stage: BuildAndTest
+    displayName: "Build and Test"
+    jobs:
+      - job: buildjob
+        pool:
+          vmImage: "windows-latest"
+        steps:
+          - task: UseDotNet@2
+            inputs:
+              packageType: "sdk"
+              version: "6.0.x"
+
+          - task: SonarQubePrepare@5
+            inputs:
+              SonarQube: "SonarQubeServiceConnection" # Create this service connection in Azure DevOps
+              scannerMode: "MSBuild"
+              projectKey: "YourProjectKey"
+              projectName: "YourProjectName"
+              extraProperties: |
+                sonar.exclusions=**/bin/**,**/obj/**
+                sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/**/coverage.opencover.xml
+
+          - script: dotnet build --configuration Release
+            displayName: "Build"
+
+          - script: dotnet test --configuration Release --collect:"XPlat Code Coverage"
+            displayName: "Run Unit Tests"
+
+          - task: SonarQubeAnalyze@5
+            displayName: "Run SonarQube Analysis"
+
+          - task: SonarQubePublish@5
+            inputs:
+              pollingTimeoutSec: "300"
+
+          - script: dotnet publish -c Release -o $(Build.ArtifactStagingDirectory)
+            displayName: "Publish App"
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: "$(Build.ArtifactStagingDirectory)"
+              ArtifactName: "drop"
+              publishLocation: "Container"
+    # ---------- INFRA STAGE ----------
+  - stage: TerraformDeploy
+    displayName: "Terraform Infra Deploy"
+    dependsOn: BuildAndTest
+    jobs:
+      - job: Terraform
+        displayName: "Provision Web App with Terraform"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: "AzureSPConnection" # Service connection name
+              scriptType: "bash"
+              scriptLocation: "inlineScript"
+              inlineScript: |
+                cd infra
+                terraform init
+                terraform plan -out=tfplan
+                terraform apply -auto-approve tfplan
+            env:
+              ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+              ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+              ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+              ARM_TENANT_ID: $(ARM_TENANT_ID)
+
+  # ---------- CD STAGE ----------
+  - stage: DeployToWebApp
+    displayName: "Deploy to Azure Web App"
+    dependsOn: TerraformDeploy
+    jobs:
+      - deployment: DeployWebApp
+        environment: "production"
+        pool:
+          vmImage: "windows-latest"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: drop
+
+                - task: AzureWebApp@1
+                  inputs:
+                    azureSubscription: "AzureSPConnection" # Service connection name
+                    appType: "webApp"
+                    appName: "$(AZURE_WEBAPP_NAME)" # From your Terraform output/variable group
+                    package: "$(Pipeline.Workspace)/drop"
+
+      - stage: deploystage
+        jobs:
+          - job: deployjob
+            pool:
+              vmImage: "windows-2022"
+            steps:
+              - task:
