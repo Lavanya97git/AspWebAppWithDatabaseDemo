@@ -18,12 +18,12 @@ stages:
               packageType: "sdk"
               version: "6.0.x"
 
-          - task: SonarQubePrepare@1
+          - task: SonarCloudPrepare@3
             inputs:
-              SonarCloud: "SonarQubeServiceConnection" # Create this service connection in Azure DevOps
-              Organization: "yagjnasri97-2"
-              scannerMode: "MSBuild"
-              projectKey: "$(SONAR_PROJECT_KEY)"
+              SonarQube: "SonarQubeServiceConnection" # Create this service connection in Azure DevOps
+              organization: "yagjnasri97-2"
+              scannerMode: "dotnet"
+              projectKey: "yagjnasri97_CI-CDwithSonarcloudYml"
               projectName: "CI-CDwithSonarcloudYml"
               extraProperties: |
                 sonar.exclusions=**/bin/**,**/obj/**
@@ -35,10 +35,10 @@ stages:
           - script: dotnet test --configuration Release --collect:"XPlat Code Coverage"
             displayName: "Run Unit Tests"
 
-          - task: SonarQubeAnalyze@5
+          - task: SonarQubeAnalyze@3
             displayName: "Run SonarQube Analysis"
 
-          - task: SonarQubePublish@5
+          - task: SonarQubePublish@3
             inputs:
               pollingTimeoutSec: "300"
 
