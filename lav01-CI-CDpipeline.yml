@@ -17,6 +17,12 @@ stages:
             inputs:
               packageType: "sdk"
               version: "6.0.x"
+          - task: NuGetToolInstaller@1
+
+          - task: NuGetCommand@2
+            inputs:
+              command: "restore"
+              restoreSolution: "**/*.sln"
 
           - task: SonarCloudPrepare@3
             inputs:
@@ -32,8 +38,10 @@ stages:
           - script: dotnet build WebApp/WebApp.csproj --configuration Release
             displayName: "Build"
 
-          - script: dotnet test --configuration Release --collect:"XPlat Code Coverage"
-            displayName: "Run Unit Tests"
+          - script: dotnet test WebApp.UnitTest/WebApp.UnitTest.csproj --configuration Release --collect:"XPlat Code Coverage"
+            displayName: "Run Unit Tests Only"
+          #above script or this use  - script: dotnet test ./YourApp.sln --configuration Release --collect:"XPlat Code Coverage"
+          #    displayName: "Run Tests"
 
           - task: SonarCloudAnalyze@3
             displayName: "Run SonarQube Analysis"
@@ -45,8 +53,11 @@ stages:
           #          - script: dotnet build ./WebApp/WebApp.csproj --configuration Release
           #            displayName: "Build App without SQL project"
 
-          - script: dotnet publish -c Release -o $(Build.ArtifactStagingDirectory)
-            displayName: "Publish App"
+          - script: dotnet restore WebApp/WebApp.csproj
+            displayName: "Restore WebApp"
+
+          - script: dotnet publish WebApp/WebApp.csproj -c Release -o $(Build.ArtifactStagingDirectory)
+            displayName: "Publish WebApp Only"
 
           - task: PublishBuildArtifacts@1
             inputs:
