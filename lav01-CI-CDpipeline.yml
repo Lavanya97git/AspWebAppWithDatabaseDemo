@@ -18,12 +18,12 @@ stages:
               packageType: "sdk"
               version: "6.0.x"
 
-          - task: SonarQubePrepare@5
+          - task: SonarQubePrepare@1
             inputs:
-              SonarQube: "SonarQubeServiceConnection" # Create this service connection in Azure DevOps
-              SonarQubeOrganization: "yagjnasri97-2"
+              SonarCloud: "SonarQubeServiceConnection" # Create this service connection in Azure DevOps
+              Organization: "yagjnasri97-2"
               scannerMode: "MSBuild"
-              projectKey: $(SONAR_PROJECT_KEY)
+              projectKey: "$(SONAR_PROJECT_KEY)"
               projectName: "CI-CDwithSonarcloudYml"
               extraProperties: |
                 sonar.exclusions=**/bin/**,**/obj/**
