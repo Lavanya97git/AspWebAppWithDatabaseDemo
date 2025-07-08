@@ -14,7 +14,7 @@ resource "azurerm_app_service_plan" "app_plan" {
     tier = "Standard"
     size = "S1"
   }
-  os_type = "Windows"  # change to "Linux" if needed
+  kind = "Windows"  # change to "Linux" if needed
 }
 
 resource "azurerm_app_service" "web_app" {
