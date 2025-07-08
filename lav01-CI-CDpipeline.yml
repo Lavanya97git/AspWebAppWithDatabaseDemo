@@ -21,9 +21,10 @@ stages:
           - task: SonarQubePrepare@5
             inputs:
               SonarQube: "SonarQubeServiceConnection" # Create this service connection in Azure DevOps
+              SonarQubeOrganization: "yagjnasri97-2"
               scannerMode: "MSBuild"
-              projectKey: "YourProjectKey"
-              projectName: "YourProjectName"
+              projectKey: $(SONAR_PROJECT_KEY)
+              projectName: "CI-CDwithSonarcloudYml"
               extraProperties: |
                 sonar.exclusions=**/bin/**,**/obj/**
                 sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/**/coverage.opencover.xml
