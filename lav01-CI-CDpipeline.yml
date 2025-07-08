@@ -97,11 +97,3 @@ stages:
                     appType: "webApp"
                     appName: "$(AZURE_WEBAPP_NAME)" # From your Terraform output/variable group
                     package: "$(Pipeline.Workspace)/drop"
-
-      - stage: deploystage
-        jobs:
-          - job: deployjob
-            pool:
-              vmImage: "windows-2022"
-            steps:
-              - task:
