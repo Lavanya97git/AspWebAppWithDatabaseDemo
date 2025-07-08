@@ -29,7 +29,7 @@ stages:
                 sonar.exclusions=**/bin/**,**/obj/**
                 sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/**/coverage.opencover.xml
 
-          - script: dotnet build --configuration Release
+          - script: dotnet build WebApp/WebApp.csproj --configuration Release
             displayName: "Build"
 
           - script: dotnet test --configuration Release --collect:"XPlat Code Coverage"
@@ -42,8 +42,8 @@ stages:
             inputs:
               pollingTimeoutSec: "300"
 
-          - script: dotnet build ./WebApp/WebApp.csproj --configuration Release
-            displayName: "Build App without SQL project"
+          #          - script: dotnet build ./WebApp/WebApp.csproj --configuration Release
+          #            displayName: "Build App without SQL project"
 
           - script: dotnet publish -c Release -o $(Build.ArtifactStagingDirectory)
             displayName: "Publish App"
