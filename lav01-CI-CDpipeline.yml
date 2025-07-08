@@ -33,9 +33,9 @@ stages:
               scannerMode: "dotnet"
               projectKey: "yagjnasri97_CI-CDwithSonarcloudYml"
               projectName: "CI-CDwithSonarcloudYml"
-              extraProperties: |
-                sonar.exclusions=**/bin/**,**/obj/**
-                sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/**/coverage.opencover.xml
+          #              extraProperties: |
+          #                sonar.exclusions=**/bin/**,**/obj/**
+          #                sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/**/coverage.opencover.xml
 
           - script: dotnet build WebApp/WebApp.csproj --configuration Release
             displayName: "Build"
