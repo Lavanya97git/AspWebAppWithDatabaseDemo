@@ -30,7 +30,7 @@ stages:
             inputs:
               SonarQube: "SonarQubeServiceConnection" # Create this service connection in Azure DevOps
               organization: "yagjnasri97-2"
-              scannerMode: "dotnet"
+              scannerMode: "MSBuild"
               projectKey: "yagjnasri97_CI-CDwithSonarcloudYml"
               projectName: "CI-CDwithSonarcloudYml"
           #              extraProperties: |
