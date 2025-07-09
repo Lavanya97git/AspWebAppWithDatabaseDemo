@@ -2,12 +2,21 @@ trigger:
   branches:
     include:
       - devbranch
-#     - master
+      - master
+pr:
+  branches:
+    include:
+      - devbranch
 variables:
   - group: project-variablesCI-CD
 stages:
   - stage: BuildAndTest
     displayName: "Build and Test"
+    condition: |
+      or(
+      eq(variables['Build.SourceBranchName'], 'devbranch'),
+      eq(variables['Build.SourceBranchName'], 'master')
+      )
     jobs:
       - job: buildjob
         pool:
@@ -48,10 +57,6 @@ stages:
           - task: SonarCloudAnalyze@3
             displayName: "Run SonarQube Analysis"
 
-          - task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@3
-            inputs:
-              pollingTimeoutSec: "300"
-
           #          - script: dotnet build ./WebApp/WebApp.csproj --configuration Release
           #            displayName: "Build App without SQL project"
 
@@ -70,6 +75,7 @@ stages:
   - stage: TerraformDeploy
     displayName: "Terraform Infra Deploy"
     dependsOn: BuildAndTest
+    condition: eq(variables['Build.SourceBranchName'], 'master')
     jobs:
       - job: Terraform
         displayName: "Provision Web App with Terraform"
@@ -92,10 +98,15 @@ stages:
               ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
               ARM_TENANT_ID: $(ARM_TENANT_ID)
 
+          - task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@3
+            inputs:
+              pollingTimeoutSec: "300"
+
   # ---------- CD STAGE ----------
   - stage: DeployToWebApp
     displayName: "Deploy to Azure Web App"
     dependsOn: TerraformDeploy
+    condition: eq(variables['Build.SourceBranchName'], 'master')
     jobs:
       - deployment: DeployWebApp
         environment: "production"
