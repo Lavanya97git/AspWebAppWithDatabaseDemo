@@ -1,0 +1,127 @@
+trigger:
+  branches:
+    include:
+      - devbranch
+      - master
+pr:
+  branches:
+    include:
+      - devbranch
+variables:
+  - group: project-variablesCI-CD
+stages:
+  - stage: BuildAndTest
+    displayName: "Build and Test"
+    condition: |
+      or(
+      eq(variables['Build.SourceBranchName'], 'devbranch'),
+      eq(variables['Build.SourceBranchName'], 'master')
+      )
+    jobs:
+      - job: buildjob
+        pool:
+          vmImage: "windows-latest"
+        steps:
+          - checkout: self
+            fetchDepth: 0
+          - task: UseDotNet@2
+            inputs:
+              packageType: "sdk"
+              version: "6.0.x"
+          - task: NuGetToolInstaller@1
+
+          - task: NuGetCommand@2
+            inputs:
+              command: "restore"
+              restoreSolution: "**/*.sln"
+
+          - task: SonarCloudPrepare@3
+            inputs:
+              SonarQube: "SonarQubeServiceConnection" # Create this service connection in Azure DevOps
+              organization: "yagjnasri97-2"
+              scannerMode: "dotnet"
+              projectKey: "yagjnasri97_CI-CDwithSonarcloudYml"
+              projectName: "CI-CDwithSonarcloudYml"
+          #              extraProperties: |
+          #                sonar.exclusions=**/bin/**,**/obj/**
+          #                sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/**/coverage.opencover.xml
+
+          - script: dotnet build WebApp/WebApp.csproj --configuration Release
+            displayName: "Build"
+
+          - script: dotnet test WebApp.UnitTest/WebApp.UnitTest.csproj --configuration Release --collect:"XPlat Code Coverage"
+            displayName: "Run Unit Tests Only"
+          #above script or this use  - script: dotnet test ./YourApp.sln --configuration Release --collect:"XPlat Code Coverage"
+          #    displayName: "Run Tests"
+
+          - task: SonarCloudAnalyze@3
+            displayName: "Run SonarQube Analysis"
+
+          #          - script: dotnet build ./WebApp/WebApp.csproj --configuration Release
+          #            displayName: "Build App without SQL project"
+
+          - script: dotnet restore WebApp/WebApp.csproj
+            displayName: "Restore WebApp"
+
+          - script: dotnet publish WebApp/WebApp.csproj -c Release -o $(Build.ArtifactStagingDirectory)
+            displayName: "Publish WebApp Only"
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: "$(Build.ArtifactStagingDirectory)"
+              ArtifactName: "drop"
+              publishLocation: "Container"
+    # ---------- INFRA STAGE ----------
+  - stage: TerraformDeploy
+    displayName: "Terraform Infra Deploy"
+    dependsOn: BuildAndTest
+    condition: eq(variables['Build.SourceBranchName'], 'master')
+    jobs:
+      - job: Terraform
+        displayName: "Provision Web App with Terraform"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: "AzureSPConnection" # Service connection name
+              scriptType: "bash"
+              scriptLocation: "inlineScript"
+              inlineScript: |
+                cd infra
+                terraform init
+                terraform plan -out=tfplan
+                terraform apply -auto-approve tfplan
+            env:
+              ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+              ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+              ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+              ARM_TENANT_ID: $(ARM_TENANT_ID)
+
+          - task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@3
+            inputs:
+              pollingTimeoutSec: "300"
+
+  # ---------- CD STAGE ----------
+  - stage: DeployToWebApp
+    displayName: "Deploy to Azure Web App"
+    dependsOn: TerraformDeploy
+    condition: eq(variables['Build.SourceBranchName'], 'master')
+    jobs:
+      - deployment: DeployWebApp
+        environment: "production"
+        pool:
+          vmImage: "windows-latest"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: drop
+
+                - task: AzureWebApp@1
+                  inputs:
+                    azureSubscription: "AzureSPConnection" # Service connection name
+                    appType: "webApp"
+                    appName: "$(AZURE_WEBAPP_NAME)" # From your Terraform output/variable group
+                    package: "$(Pipeline.Workspace)/drop"
