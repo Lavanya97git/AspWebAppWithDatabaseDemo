@@ -47,9 +47,9 @@ stages:
           - task: VSBuild@1
             inputs:
               solution: "**/*.sln"
-              msbuildArgs: "/p:Configuration=$(buildConfiguration)"
+              msbuildArgs: '/p:Configuration=Release /p:Platform="Any CPU"'
+              configuration: "Release" # 👈 Must match what's available in your solution
               platform: "Any CPU"
-              configuration: "$(buildConfiguration)"
 
           - task: SonarCloudAnalyze@3
             displayName: "Run SonarQube Analysis"
