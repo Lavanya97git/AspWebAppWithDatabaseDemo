@@ -46,15 +46,15 @@ stages:
           #    displayName: "Run Tests"
           - task: VSBuild@1
             inputs:
-              solution: "**/*.sln"
-              msbuildArgs: '/p:Configuration=Release /p:Platform="Any CPU"'
+              solution: "**/WebAppWithDatabase.sln"
+              msbuildArgs: '/t:Build /p:Configuration=Release /p:Platform="Any CPU" /p:BuildProjectReferences=false'
               configuration: "Release" # 👈 Must match what's available in your solution
               platform: "Any CPU"
 
           - task: SonarCloudAnalyze@3
             displayName: "Run SonarQube Analysis"
 
-          - task: SonarCloudPublish@3
+          - task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@3
             inputs:
               pollingTimeoutSec: "300"
 
