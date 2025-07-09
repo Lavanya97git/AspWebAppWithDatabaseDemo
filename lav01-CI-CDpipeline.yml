@@ -44,12 +44,6 @@ stages:
             displayName: "Run Unit Tests Only"
           #above script or this use  - script: dotnet test ./YourApp.sln --configuration Release --collect:"XPlat Code Coverage"
           #    displayName: "Run Tests"
-          - task: VSBuild@1
-            inputs:
-              solution: "**/WebAppWithDatabase.sln"
-              msbuildArgs: '/t:Build /p:Configuration=Release /p:Platform="Any CPU" /p:BuildProjectReferences=false'
-              configuration: "Release" # 👈 Must match what's available in your solution
-              platform: "Any CPU"
 
           - task: SonarCloudAnalyze@3
             displayName: "Run SonarQube Analysis"
