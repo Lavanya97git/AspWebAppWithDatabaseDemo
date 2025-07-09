@@ -30,7 +30,7 @@ stages:
             inputs:
               SonarQube: "SonarQubeServiceConnection" # Create this service connection in Azure DevOps
               organization: "yagjnasri97-2"
-              scannerMode: "MSBuild"
+              scannerMode: "dotnet"
               projectKey: "yagjnasri97_CI-CDwithSonarcloudYml"
               projectName: "CI-CDwithSonarcloudYml"
           #              extraProperties: |
@@ -44,6 +44,12 @@ stages:
             displayName: "Run Unit Tests Only"
           #above script or this use  - script: dotnet test ./YourApp.sln --configuration Release --collect:"XPlat Code Coverage"
           #    displayName: "Run Tests"
+          - task: VSBuild@1
+            inputs:
+              solution: "**/*.sln"
+              msbuildArgs: "/p:Configuration=$(buildConfiguration)"
+              platform: "Any CPU"
+              configuration: "$(buildConfiguration)"
 
           - task: SonarCloudAnalyze@3
             displayName: "Run SonarQube Analysis"
