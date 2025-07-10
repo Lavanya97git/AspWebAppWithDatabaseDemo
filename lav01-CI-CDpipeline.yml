@@ -12,10 +12,7 @@ variables:
 stages:
   - stage: BuildAndTest
     displayName: "Build and Test"
-    condition: |
-      or(
-      eq(variables['Build.SourceBranchName'], 'master'),
-      )
+    condition: eq(variables['Build.SourceBranchName'], 'master')
     # eq(variables['Build.SourceBranchName'], 'devbranch')
     jobs:
       - job: buildjob
