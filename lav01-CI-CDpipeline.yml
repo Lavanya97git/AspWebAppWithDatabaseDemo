@@ -14,9 +14,9 @@ stages:
     displayName: "Build and Test"
     condition: |
       or(
-      eq(variables['Build.SourceBranchName'], 'devbranch'),
-      eq(variables['Build.SourceBranchName'], 'master')
+      eq(variables['Build.SourceBranchName'], 'master'),
       )
+    # eq(variables['Build.SourceBranchName'], 'devbranch')
     jobs:
       - job: buildjob
         pool:
@@ -24,16 +24,20 @@ stages:
         steps:
           - checkout: self
             fetchDepth: 0
+
           - task: UseDotNet@2
             inputs:
               packageType: "sdk"
               version: "6.0.x"
+
           - task: NuGetToolInstaller@1
 
-          - task: NuGetCommand@2
-            inputs:
-              command: "restore"
-              restoreSolution: "**/*.sln"
+          - script: dotnet restore WebApp/WebApp.csproj
+            displayName: "Restore WebApp"
+          # - task: NuGetCommand@2
+          #   inputs:
+          #     command: "restore"
+          #     restoreSolution: "**/*.sln"
 
           - task: SonarCloudPrepare@3
             inputs:
@@ -60,8 +64,9 @@ stages:
           #          - script: dotnet build ./WebApp/WebApp.csproj --configuration Release
           #            displayName: "Build App without SQL project"
 
-          - script: dotnet restore WebApp/WebApp.csproj
-            displayName: "Restore WebApp"
+          - task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@3
+            inputs:
+              pollingTimeoutSec: "300"
 
           - script: dotnet publish WebApp/WebApp.csproj -c Release -o $(Build.ArtifactStagingDirectory)
             displayName: "Publish WebApp Only"
@@ -80,27 +85,14 @@ stages:
       - job: Terraform
         displayName: "Provision Web App with Terraform"
         pool:
-          vmImage: "ubuntu-latest"
+          vmImage: "windows-latest"
         steps:
           - task: AzureCLI@2
             inputs:
               azureSubscription: "AzureSPConnection" # Service connection name
               scriptType: "bash"
-              scriptLocation: "inlineScript"
-              inlineScript: |
-                cd infra
-                terraform init
-                terraform plan -out=tfplan
-                terraform apply -auto-approve tfplan
-            env:
-              ARM_CLIENT_ID: $(ARM_CLIENT_ID)
-              ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
-              ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
-              ARM_TENANT_ID: $(ARM_TENANT_ID)
-
-          - task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@3
-            inputs:
-              pollingTimeoutSec: "300"
+              scriptPath: Terraform/main.tf
+              arguments: "-ARM_CLIENT_ID $(ARM_CLIENT_ID) -ARM_CLIENT_SECRET $(ARM_CLIENT_SECRET) -ARM_SUBSCRIPTION_ID $(ARM_SUBSCRIPTION_ID) -ARM_TENANT_ID $(ARM_TENANT_ID)"
 
   # ---------- CD STAGE ----------
   - stage: DeployToWebApp
