@@ -3,17 +3,13 @@ trigger:
     include:
       - devbranch
       - master
-pr:
-  branches:
-    include:
-      - devbranch
+# pr: branches: include: - devbranch
 variables:
   - group: project-variablesCI-CD
 stages:
   - stage: BuildAndTest
     displayName: "Build and Test"
-    condition: eq(variables['Build.SourceBranchName'], 'master')
-    # eq(variables['Build.SourceBranchName'], 'devbranch')
+    condition: or(eq(variables['Build.SourceBranchName'], 'master'), eq(variables['Build.SourceBranchName'], 'devbranch'))
     jobs:
       - job: buildjob
         pool:
@@ -29,12 +25,12 @@ stages:
 
           - task: NuGetToolInstaller@1
 
-          - script: dotnet restore WebApp/WebApp.csproj
-            displayName: "Restore WebApp"
-          # - task: NuGetCommand@2
-          #   inputs:
-          #     command: "restore"
-          #     restoreSolution: "**/*.sln"
+          # - script: dotnet restore WebApp/WebApp.csproj
+          #   displayName: "Restore WebApp"
+          - task: NuGetCommand@2
+            inputs:
+              command: "restore"
+              restoreSolution: "**/*.sln"
 
           - task: SonarCloudPrepare@3
             inputs:
