@@ -113,12 +113,6 @@ stages:
             inputs:
               SourceFolder: "$(agent.builddirectory)"
               TargetFolder: "$(build.artifactstagingdirectory)"
-          - script: |
-              echo "⚠️ WARNING: Terraform destroy will run in 1800 seconds..."
-              sleep 60
-
-              echo "Starting Terraform Destroy..."
-              terraform destroy -auto-approve
 
           # - task: PublishBuildArtifacts@1
           #   displayName: "Publish Artifact: drop"
@@ -151,3 +145,9 @@ stages:
               azureSubscription: "AzureSPConnection" # from project library
               appName: "AZwedapp1031" # your Terraform created web app name
               package: "$(System.ArtifactsDirectory)/drop/**/*.zip"
+          - script: |
+              echo "⚠️ WARNING: Terraform destroy will run in 1800 seconds..."
+              sleep 300
+
+              echo "Starting Terraform Destroy..."
+              terraform destroy -auto-approve
