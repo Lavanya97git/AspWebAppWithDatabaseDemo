@@ -123,31 +123,31 @@ stages:
           # - task: PublishBuildArtifacts@1
           #   displayName: "Publish Artifact: drop"
   # ---------- CD STAGE ----------
-  # - stage: DeployToWebApp
-  #   displayName: "Deploy to Azure Web App"
-  #   dependsOn: TerraformDeploy
-  #   condition: eq(variables['Build.SourceBranchName'], 'master')
-  #   jobs:
-  #     - job: DeployWebApp
-  #       #        environment: "production"
-  #       pool:
-  #         vmImage: "windows-latest"
-  #       # strategy:
-  #       #   runOnce:
-  #       #     deploy:
-  #       steps:
-  #         # Download the published artifact from Stage 1
-  #         - task: DownloadBuildArtifacts@0
-  #           inputs:
-  #             buildType: "current"
-  #             downloadType: "single"
-  #             artifactName: "drop" # same name you used in PublishBuildArtifacts
-  #             downloadPath: "$(System.ArtifactsDirectory)"
+  - stage: DeployToWebApp
+    displayName: "Deploy to Azure Web App"
+    dependsOn: TerraformDeploy
+    condition: eq(variables['Build.SourceBranchName'], 'master')
+    jobs:
+      - job: DeployWebApp
+        #        environment: "production"
+        pool:
+          vmImage: "windows-latest"
+        # strategy:
+        #   runOnce:
+        #     deploy:
+        steps:
+          # Download the published artifact from Stage 1
+          - task: DownloadBuildArtifacts@1
+            inputs:
+              buildType: "current"
+              downloadType: "single"
+              artifactName: "drop" # same name you used in PublishBuildArtifacts
+              downloadPath: "$(System.ArtifactsDirectory)"
 
-  #         # Deploy to Azure WebApp
-  #         - task: AzureWebApp@1
-  #           displayName: "Deploy to AZwedapp1031"
-  #           inputs:
-  #             azureSubscription: "AzureSPConnection" # from project library
-  #             appName: "AZwedapp1031" # your Terraform created web app name
-  #             package: "$(System.ArtifactsDirectory)/drop/**/*.zip"
+          # Deploy to Azure WebApp
+          - task: AzureWebApp@1
+            displayName: "Deploy to AZwedapp1031"
+            inputs:
+              azureSubscription: "AzureSPConnection" # from project library
+              appName: "AZwedapp1031" # your Terraform created web app name
+              package: "$(System.ArtifactsDirectory)/drop/**/*.zip"
