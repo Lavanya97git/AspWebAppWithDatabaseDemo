@@ -39,7 +39,7 @@ resource "azurerm_service_plan" "AZappSP103" {
   
 }
 resource "azurerm_windows_web_app" "AZwebapp103" {
-    name = "AZwedapp1031"
+    name = "AZwebapp1031"
     resource_group_name = azurerm_resource_group.AZrg103.name
     location = azurerm_resource_group.AZrg103.location
     service_plan_id = azurerm_service_plan.AZappSP103.id
