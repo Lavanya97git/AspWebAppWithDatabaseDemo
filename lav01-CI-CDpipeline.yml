@@ -64,6 +64,15 @@ stages:
           - script: dotnet publish WebApp/WebApp.csproj -c Release -o $(Build.ArtifactStagingDirectory)
             displayName: "Publish WebApp Only"
 
+          - task: ArchiveFiles@2
+            displayName: "Archive WebApp into zip"
+            inputs:
+              rootFolderOrFile: "$(Build.ArtifactStagingDirectory)"
+              includeRootFolder: false
+              archiveType: "zip"
+              archiveFile: "$(Build.ArtifactStagingDirectory)/WebApp.zip"
+              replaceExistingArchive: true
+
           - task: PublishBuildArtifacts@1
             inputs:
               PathtoPublish: "$(Build.ArtifactStagingDirectory)"
