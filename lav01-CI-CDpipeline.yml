@@ -128,7 +128,7 @@ stages:
   # ---------- CD STAGE ----------
   - stage: DeployToWebApp
     displayName: "Deploy to Azure Web App"
-    dependsOn: TerraformDeploy
+    dependsOn: TerraformProvisioning
     condition: eq(variables['Build.SourceBranchName'], 'master')
     jobs:
       - job: DeployWebApp
