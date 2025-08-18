@@ -70,79 +70,79 @@ stages:
               ArtifactName: "drop"
               publishLocation: "Container"
     # ---------- INFRA STAGE ----------
-  - stage: TerraformDeploy
-    displayName: "Terraform Infra Deploy"
-    dependsOn: BuildAndTest
-    condition: eq(variables['Build.SourceBranchName'], 'master')
-    jobs:
-      - job: Terraform
-        displayName: "Provision Web App with Terraform"
-        pool:
-          vmImage: ubuntu-latest
-        variables:
-          solution: "**/*.sln"
-          buildPlatform: "Any CPU"
-          buildConfiguration: "Release"
+  # - stage: TerraformDeploy
+  #   displayName: "Terraform Infra Deploy"
+  #   dependsOn: BuildAndTest
+  #   condition: eq(variables['Build.SourceBranchName'], 'master')
+  #   jobs:
+  #     - job: Terraform
+  #       displayName: "Provision Web App with Terraform"
+  #       pool:
+  #         vmImage: ubuntu-latest
+  #       variables:
+  #         solution: "**/*.sln"
+  #         buildPlatform: "Any CPU"
+  #         buildConfiguration: "Release"
 
-        steps:
-          - script: |
-              echo "Install Terraform v1.8.2 manually."
-              # Install Terraform v1.8.2 manually
-              sudo apt-get update && sudo apt-get install -y wget unzip
-              wget https://releases.hashicorp.com/terraform/1.8.2/terraform_1.8.2_linux_amd64.zip
-              unzip terraform_1.8.2_linux_amd64.zip
-              sudo mv terraform /usr/local/bin/
-              terraform -version
-            displayName: "Command Line Script"
-          - script: |
-              export ARM_ACCESS_KEY=$(ARM_ACCESS_KEY)
+  #       steps:
+  #         - script: |
+  #             echo "Install Terraform v1.8.2 manually."
+  #             # Install Terraform v1.8.2 manually
+  #             sudo apt-get update && sudo apt-get install -y wget unzip
+  #             wget https://releases.hashicorp.com/terraform/1.8.2/terraform_1.8.2_linux_amd64.zip
+  #             unzip terraform_1.8.2_linux_amd64.zip
+  #             sudo mv terraform /usr/local/bin/
+  #             terraform -version
+  #           displayName: "Command Line Script"
+  #         - script: |
+  #             export ARM_ACCESS_KEY=$(ARM_ACCESS_KEY)
 
-              echo "terraform commands init"
-              terraform init
+  #             echo "terraform commands init"
+  #             terraform init
 
-            displayName: "Command Line Script"
+  #           displayName: "Command Line Script"
 
-          - script: |
-              echo "I am going now terraform commands"
+  #         - script: |
+  #             echo "I am going now terraform commands"
 
-              terraform plan -out=tfplan
-              terraform apply -auto-approve tfplan
+  #             terraform plan -out=tfplan
+  #             terraform apply -auto-approve tfplan
 
-            displayName: "Command Line Script"
-          - task: CopyFiles@2
-            displayName: "Copy Files to: $(build.artifactstagingdirectory)"
-            inputs:
-              SourceFolder: "$(agent.builddirectory)"
-              TargetFolder: "$(build.artifactstagingdirectory)"
+  #           displayName: "Command Line Script"
+  #         - task: CopyFiles@2
+  #           displayName: "Copy Files to: $(build.artifactstagingdirectory)"
+  #           inputs:
+  #             SourceFolder: "$(agent.builddirectory)"
+  #             TargetFolder: "$(build.artifactstagingdirectory)"
 
-          # - task: PublishBuildArtifacts@1
-          #   displayName: "Publish Artifact: drop"
-  # ---------- CD STAGE ----------
-  - stage: DeployToWebApp
-    displayName: "Deploy to Azure Web App"
-    dependsOn: TerraformDeploy
-    condition: eq(variables['Build.SourceBranchName'], 'master')
-    jobs:
-      - job: DeployWebApp
-        #        environment: "production"
-        pool:
-          vmImage: "windows-latest"
-        # strategy:
-        #   runOnce:
-        #     deploy:
-        steps:
-          # Download the published artifact from Stage 1
-          - task: DownloadBuildArtifacts@0
-            inputs:
-              buildType: "current"
-              downloadType: "single"
-              artifactName: "drop" # same name you used in PublishBuildArtifacts
-              downloadPath: "$(System.ArtifactsDirectory)"
+  #         # - task: PublishBuildArtifacts@1
+  #         #   displayName: "Publish Artifact: drop"
+  # # ---------- CD STAGE ----------
+  # - stage: DeployToWebApp
+  #   displayName: "Deploy to Azure Web App"
+  #   dependsOn: TerraformDeploy
+  #   condition: eq(variables['Build.SourceBranchName'], 'master')
+  #   jobs:
+  #     - job: DeployWebApp
+  #       #        environment: "production"
+  #       pool:
+  #         vmImage: "windows-latest"
+  #       # strategy:
+  #       #   runOnce:
+  #       #     deploy:
+  #       steps:
+  #         # Download the published artifact from Stage 1
+  #         - task: DownloadBuildArtifacts@0
+  #           inputs:
+  #             buildType: "current"
+  #             downloadType: "single"
+  #             artifactName: "drop" # same name you used in PublishBuildArtifacts
+  #             downloadPath: "$(System.ArtifactsDirectory)"
 
-          # Deploy to Azure WebApp
-          - task: AzureWebApp@1
-            displayName: "Deploy to AZwedapp1031"
-            inputs:
-              azureSubscription: "$(ARM_SUBSCRIPTION_ID)" # from project library
-              appName: "AZwedapp1031" # your Terraform created web app name
-              package: "$(System.ArtifactsDirectory)/drop/**/*.zip"
+  #         # Deploy to Azure WebApp
+  #         - task: AzureWebApp@1
+  #           displayName: "Deploy to AZwedapp1031"
+  #           inputs:
+  #             azureSubscription: "$(ARM_SUBSCRIPTION_ID)" # from project library
+  #             appName: "AZwedapp1031" # your Terraform created web app name
+  #             package: "$(System.ArtifactsDirectory)/drop/**/*.zip"
