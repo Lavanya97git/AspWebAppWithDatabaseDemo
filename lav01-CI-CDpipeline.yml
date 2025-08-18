@@ -86,9 +86,6 @@ stages:
 
         steps:
           - script: |
-              echo "Starting Terraform Destroy..."
-              terraform destroy -auto-approve
-          - script: |
               echo "Install Terraform v1.8.2 manually."
               # Install Terraform v1.8.2 manually
               sudo apt-get update && sudo apt-get install -y wget unzip
@@ -96,6 +93,9 @@ stages:
               unzip terraform_1.8.2_linux_amd64.zip
               sudo mv terraform /usr/local/bin/
               terraform -version
+          - script: |
+              echo "Starting Terraform Destroy..."
+              terraform destroy -auto-approve
             displayName: "Command Line Script"
           - script: |
               export ARM_ACCESS_KEY=$(ARM_ACCESS_KEY)
@@ -104,7 +104,6 @@ stages:
               terraform init
 
             displayName: "Command Line Script"
-
           - script: |
               echo "I am going now terraform commands"
 
