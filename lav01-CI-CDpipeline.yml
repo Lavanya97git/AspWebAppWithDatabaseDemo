@@ -142,7 +142,7 @@ stages:
           - task: AzureWebApp@1
             displayName: "Deploy to AZwedapp1031"
             inputs:
-              azureSubscription: "AzureSPConnection" # from project library
+              azureSubscription: "newresourcegrp1031" # from project library
               appName: "AZwedapp1031" # your Terraform created web app name
               package: "$(System.ArtifactsDirectory)/drop/**/*.zip"
           - script: |
