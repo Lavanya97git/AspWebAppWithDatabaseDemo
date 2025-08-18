@@ -127,9 +127,9 @@ stages:
         #        environment: "production"
         pool:
           vmImage: "windows-latest"
-        strategy:
-          runOnce:
-            deploy:
+        # strategy:
+        #   runOnce:
+        #     deploy:
         steps:
           # Download the published artifact from Stage 1
           - task: DownloadBuildArtifacts@0
