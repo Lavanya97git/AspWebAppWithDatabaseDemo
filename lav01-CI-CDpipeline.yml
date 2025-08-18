@@ -64,14 +64,14 @@ stages:
           - script: dotnet publish WebApp/WebApp.csproj -c Release -o $(Build.ArtifactStagingDirectory)
             displayName: "Publish WebApp Only"
 
-          - task: ArchiveFiles@2
-            displayName: "Archive WebApp into zip"
-            inputs:
-              rootFolderOrFile: "$(Build.ArtifactStagingDirectory)"
-              includeRootFolder: false
-              archiveType: "zip"
-              archiveFile: "$(Build.ArtifactStagingDirectory)/WebApp.zip"
-              replaceExistingArchive: true
+          # - task: ArchiveFiles@2
+          #   displayName: "Archive WebApp into zip"
+          #   inputs:
+          #     rootFolderOrFile: "$(Build.ArtifactStagingDirectory)"
+          #     includeRootFolder: false
+          #     archiveType: "zip"
+          #     archiveFile: "$(Build.ArtifactStagingDirectory)/WebApp.zip"
+          #     replaceExistingArchive: true
 
           - task: PublishBuildArtifacts@1
             inputs:
@@ -79,8 +79,8 @@ stages:
               ArtifactName: "drop"
               publishLocation: "Container"
     # ---------- INFRA STAGE ----------
-  - stage: TerraformDeploy
-    displayName: "Terraform Infra Deploy"
+  - stage: TerraformProvisioning
+    displayName: "Terraform Infra provision"
     dependsOn: BuildAndTest
     condition: eq(variables['Build.SourceBranchName'], 'master')
     jobs:
@@ -153,10 +153,4 @@ stages:
             inputs:
               azureSubscription: "newresourcegrp1031" # from project library
               appName: "AZwedapp1031" # your Terraform created web app name
-              package: "$(System.ArtifactsDirectory)/drop/**/*.zip"
-          - script: |
-              echo "⚠️ WARNING: Terraform destroy will run in 1800 seconds..."
-              sleep 300
-
-              echo "Starting Terraform Destroy..."
-              terraform destroy -auto-approve
+              package: "$(System.ArtifactsDirectory)/drop"
