@@ -44,11 +44,10 @@ resource "azurerm_windows_web_app" "AZwebapp103" {
     location = azurerm_resource_group.AZrg103.location
     service_plan_id = azurerm_service_plan.AZappSP103.id
     depends_on = [ azurerm_service_plan.AZappSP103 ]
-    https_only = true   # Enforce HTTPS only
     site_config {
-      minimum_tls_version = "1.2" # Secure TLS
     }
     tags = {
         "name" = "WebApp1031"
     }
 }
+
