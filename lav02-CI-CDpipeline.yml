@@ -106,19 +106,12 @@ stages:
               TF_VAR_client_secret: $(client-secret)
               TF_VAR_tenant_id: $(tenant-id)
 
-          #   displayName: "Command Line Script"
-          # - task: CopyFiles@2
-          #   displayName: "Copy Files to: $(build.artifactstagingdirectory)"
-          #   inputs:
-          #     SourceFolder: "$(agent.builddirectory)"
-          #     TargetFolder: "$(build.artifactstagingdirectory)"
-
       # ---------- CD STAGE ----------
       - job: DeployWebApp
         displayName: "Deploy to Azure Web App"
         #        environment: "production"
         pool:
-          vmImage: "windows-latest"
+          vmImage: "windows-2025"
         # strategy:
         #   runOnce:
         #     deploy:
@@ -139,14 +132,14 @@ stages:
               appName: "AZwebapp1031" # your Terraform created web app name
               package: "$(System.ArtifactsDirectory)/drop"
 
-          - script: |
-              echo "⚠️ WARNING: Terraform destroy will run in 60 seconds..."
-              sleep 30
-              echo "Starting Terraform Destroy..."
-              terraform destroy -auto-approve
-            displayName: "terraform destroy"
-            env:
-              TF_VAR_subscription_id: $(subscription-id)
-              TF_VAR_client_id: $(client-id)
-              TF_VAR_client_secret: $(client-secret)
-              TF_VAR_tenant_id: $(tenant-id)
+          # - script: |
+          #     echo "⚠️ WARNING: Terraform destroy will run in 60 seconds..."
+          #     sleep 30
+          #     echo "Starting Terraform Destroy..."
+          #     terraform destroy -auto-approve
+          #   displayName: "terraform destroy"
+          #   env:
+          #     TF_VAR_subscription_id: $(subscription-id)
+          #     TF_VAR_client_id: $(client-id)
+          #     TF_VAR_client_secret: $(client-secret)
+          #     TF_VAR_tenant_id: $(tenant-id)
