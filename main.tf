@@ -43,7 +43,7 @@ resource "azurerm_windows_web_app" "WebApp101" {
     minimum_tls_version = "1.2"
     # IP Restriction
     ip_restriction {
-      ip_address = "106.222.228.233/32" # Replace with your VPN/VM public IP
+      ip_address = "223.228.111.53/32" # Replace with your VPN/VM public IP
       action     = "Allow"
       priority   = 100
       name       = "VPN_Only"
