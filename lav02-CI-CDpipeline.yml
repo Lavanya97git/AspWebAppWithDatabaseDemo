@@ -70,7 +70,7 @@ stages:
               ArtifactName: "drop"
               publishLocation: "Container"
     # ---------- INFRA STAGE ----------
-  - stage: Continous delivery stage
+  - stage: ContinousDeliveryStage
     displayName: "Terraform Infra provision and DeployWebApp"
     dependsOn: ContinousIntegrationStage
     condition: eq(variables['Build.SourceBranchName'], 'master')
