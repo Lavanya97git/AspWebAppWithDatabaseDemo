@@ -109,6 +109,7 @@ stages:
       # ---------- CD STAGE ----------
       - job: DeployWebApp
         displayName: "Deploy to Azure Web App"
+        dependsOn: terraformbuildjob
         #        environment: "production"
         pool:
           vmImage: "windows-2025"
