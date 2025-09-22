@@ -79,7 +79,7 @@ stages:
         pool:
           vmImage: ubuntu-latest
         variables:
-          - group: keyvaultterra
+          - group: keyvault-variable-group-22-Sep
         steps:
           - script: |
               echo "Install Terraform v1.8.2 manually."
