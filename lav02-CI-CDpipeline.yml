@@ -1,0 +1,152 @@
+trigger:
+  branches:
+    include:
+      - devbranch
+      - master
+# pr: branches: include: - devbranch
+variables:
+  - group: keyvault-variable-group-22-Sep
+stages:
+  - stage: ContinousIntegrationStage
+    displayName: "Build and Test"
+    condition: or(eq(variables['Build.SourceBranchName'], 'master'), eq(variables['Build.SourceBranchName'], 'devbranch'))
+    jobs:
+      - job: buildjob
+        pool:
+          vmImage: "windows-latest"
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - task: UseDotNet@2
+            inputs:
+              packageType: "sdk"
+              version: "6.0.x"
+
+          - task: NuGetToolInstaller@1
+
+          # - script: dotnet restore WebApp/WebApp.csproj
+          #   displayName: "Restore WebApp"
+          - task: NuGetCommand@2
+            inputs:
+              command: "restore"
+              restoreSolution: "**/*.sln"
+
+          - task: SonarCloudPrepare@3
+            inputs:
+              SonarQube: "SonarQubeServiceConnection" # Create this service connection in Azure DevOps
+              organization: "yagjnasri97-2"
+              scannerMode: "dotnet"
+              projectKey: "yagjnasri97_CI-CDwithSonarcloudYml"
+              projectName: "CI-CDwithSonarcloudYml"
+          #              extraProperties: |
+          #                sonar.exclusions=**/bin/**,**/obj/**
+          #                sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/**/coverage.opencover.xml
+
+          - script: dotnet build WebApp/WebApp.csproj --configuration Release
+            displayName: "Build"
+
+          - script: dotnet test WebApp.UnitTest/WebApp.UnitTest.csproj --configuration Release --collect:"XPlat Code Coverage"
+            displayName: "Run Unit Tests Only"
+          #above script or this use  - script: dotnet test ./YourApp.sln --configuration Release --collect:"XPlat Code Coverage"
+          #    displayName: "Run Tests"
+
+          - task: SonarCloudAnalyze@3
+            displayName: "Run SonarQube Analysis"
+
+          #          - script: dotnet build ./WebApp/WebApp.csproj --configuration Release
+          #            displayName: "Build App without SQL project"
+
+          - task: SonarSource.sonarcloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@3
+            inputs:
+              pollingTimeoutSec: "300"
+
+          - script: dotnet publish WebApp/WebApp.csproj -c Release -o $(Build.ArtifactStagingDirectory)
+            displayName: "Publish WebApp Only"
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: "$(Build.ArtifactStagingDirectory)"
+              ArtifactName: "drop"
+              publishLocation: "Container"
+    # ---------- INFRA STAGE ----------
+  - stage: Continous delivery stage
+    displayName: "Terraform Infra provision and DeployWebApp"
+    dependsOn: ContinousIntegrationStage
+    condition: eq(variables['Build.SourceBranchName'], 'master')
+    jobs:
+      - job: terraformbuildjob
+        pool:
+          vmImage: ubuntu-latest
+        variables:
+          - group: keyvaultterra
+        steps:
+          - script: |
+              echo "Install Terraform v1.8.2 manually."
+              sudo apt-get update && sudo apt-get install -y wget unzip
+              wget https://releases.hashicorp.com/terraform/1.8.2/terraform_1.8.2_linux_amd64.zip
+              unzip terraform_1.8.2_linux_amd64.zip
+              sudo mv terraform /usr/local/bin/
+              terraform -version
+            displayName: "Install Terraform"
+
+          - script: |
+              echo "terraform commands init"
+              terraform init
+            displayName: "Terraform init"
+
+          - script: |
+              echo "Running terraform plan & apply..."
+              terraform plan -out=tfplan
+              terraform apply -auto-approve tfplan
+            displayName: "Terraform Plan & Apply"
+            env:
+              TF_VAR_subscription_id: $(subscription-id)
+              TF_VAR_client_id: $(client-id)
+              TF_VAR_client_secret: $(client-secret)
+              TF_VAR_tenant_id: $(tenant-id)
+
+          #   displayName: "Command Line Script"
+          # - task: CopyFiles@2
+          #   displayName: "Copy Files to: $(build.artifactstagingdirectory)"
+          #   inputs:
+          #     SourceFolder: "$(agent.builddirectory)"
+          #     TargetFolder: "$(build.artifactstagingdirectory)"
+
+      # ---------- CD STAGE ----------
+      - job: DeployWebApp
+        displayName: "Deploy to Azure Web App"
+        #        environment: "production"
+        pool:
+          vmImage: "windows-latest"
+        # strategy:
+        #   runOnce:
+        #     deploy:
+        steps:
+          # Download the published artifact from Stage 1
+          - task: DownloadBuildArtifacts@1
+            inputs:
+              buildType: "current"
+              downloadType: "single"
+              artifactName: "drop" # same name you used in PublishBuildArtifacts
+              downloadPath: "$(System.ArtifactsDirectory)"
+
+          # Deploy to Azure WebApp
+          - task: AzureWebApp@1
+            displayName: "Deploy to AZwebapp1031"
+            inputs:
+              azureSubscription: "newresourcegrp1031" # from project library
+              appName: "AZwebapp1031" # your Terraform created web app name
+              package: "$(System.ArtifactsDirectory)/drop"
+
+          - script: |
+              echo "⚠️ WARNING: Terraform destroy will run in 60 seconds..."
+              sleep 30
+              echo "Starting Terraform Destroy..."
+              terraform destroy -auto-approve
+            displayName: "terraform destroy"
+            env:
+              TF_VAR_subscription_id: $(subscription-id)
+              TF_VAR_client_id: $(client-id)
+              TF_VAR_client_secret: $(client-secret)
+              TF_VAR_tenant_id: $(tenant-id)
