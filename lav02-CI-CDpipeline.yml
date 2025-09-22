@@ -135,7 +135,7 @@ stages:
           - task: AzureWebApp@1
             displayName: "Deploy to AZwebapp1031"
             inputs:
-              azureSubscription: "AzureSPConnection" # from project library
+              azureSubscription: "Azure subscription 1 (fa328e55-dabe-40b4-b304-5a2c078780c9)" # from project library
               appName: "AZwebapp1031" # your Terraform created web app name
               package: "$(System.ArtifactsDirectory)/drop"
 
