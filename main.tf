@@ -58,3 +58,25 @@ resource "azurerm_windows_web_app" "WebApp101" {
   }
   https_only = true
 }
+
+/*
+resource "azurerm_windows_web_app_slot" "staging" {
+  name                = "staging"
+  location            = azurerm_windows_web_app.WebApp101.location
+  resource_group_name = azurerm_windows_web_app.WebApp101.resource_group_name
+  app_service_name    = azurerm_windows_web_app.WebApp101.name
+  depends_on          = [azurerm_windows_web_app.WebApp101]
+
+  https_only = true
+}
+
+resource "azurerm_windows_web_app_slot" "production" {
+  name                = "production"
+  location            = azurerm_windows_web_app.WebApp101.location
+  resource_group_name = azurerm_windows_web_app.WebApp101.resource_group_name
+  app_service_name    = azurerm_windows_web_app.WebApp101.name
+  depends_on          = [azurerm_windows_web_app.WebApp101]
+
+  https_only = true
+}
+*/
